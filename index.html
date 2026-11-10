@@ -1,0 +1,120 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Tie POV — learn to tie a tie from your own point of view</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>👔</text></svg>" />
+    <style>
+      /* shown before any script or stylesheet arrives; everything else stays hidden until the scene has drawn */
+      html, body { margin: 0; height: 100%; background: #1c1a18; }
+      body:not(.ready) > :not(#loader) { visibility: hidden; }
+      #loader { position: fixed; inset: 0; z-index: 100; display: grid; place-content: center; justify-items: center; gap: 14px; background: radial-gradient(60% 50% at 50% 45%, #2b2622, #1c1a18); color: #f3eee6; transition: opacity 0.6s ease 0.1s, visibility 0s linear 0.8s; }
+      body.ready #loader { opacity: 0; visibility: hidden; pointer-events: none; }
+      #loader svg { overflow: visible; transform-origin: 50% 6%; animation: sway 2.4s ease-in-out infinite alternate; }
+      #loader .tie { fill: rgba(207, 74, 65, 0.16); stroke: #cf4a41; stroke-width: 2.5; stroke-linejoin: round; stroke-dasharray: 420; stroke-dashoffset: 420; animation: draw 1.6s ease-out forwards; }
+      #loader .dimple { stroke: #cf4a41; stroke-width: 2; stroke-linecap: round; opacity: 0.6; fill: none; }
+      #loader .word { font: 700 30px 'Iowan Old Style', 'Palatino Linotype', Palatino, Georgia, serif; letter-spacing: -0.01em; }
+      #loader .word span { color: #f2c14e; margin-left: 5px; font: 800 13px ui-sans-serif, -apple-system, 'Segoe UI', sans-serif; letter-spacing: 0.2em; vertical-align: 7px; }
+      #loader .note { font: 13px ui-sans-serif, -apple-system, 'Segoe UI', sans-serif; color: #b3aa9c; }
+      @keyframes draw { to { stroke-dashoffset: 0; } }
+      @keyframes sway { from { transform: rotate(-3deg); } to { transform: rotate(3deg); } }
+      @media (prefers-reduced-motion: reduce) { #loader svg { animation: none; } #loader .tie { animation: none; stroke-dashoffset: 0; } }
+    </style>
+  </head>
+  <body>
+    <div id="loader" aria-hidden="true">
+      <svg viewBox="0 0 80 150" width="72" height="135">
+        <path class="tie" d="M28 8 L52 8 L47 30 L33 30 Z M33 30 L47 30 L58 112 L40 140 L22 112 Z" />
+        <path class="dimple" d="M40 32 L40 52" />
+      </svg>
+      <div class="word">Tie<span>POV</span></div>
+      <div class="note">pressing the shirt…</div>
+    </div>
+    <canvas id="c"></canvas>
+    <div id="vignette"></div>
+    <div id="mirror-frame"></div>
+
+    <button id="knot-btn" aria-expanded="false" aria-controls="knots" title="Choose a knot (K)">
+      <span class="lbl">Knot</span><span id="knot-btn-name"></span><span class="chev">▾</span>
+    </button>
+
+    <aside id="knots" hidden>
+      <div class="panel-title">Knots</div>
+      <ul id="knot-list"></ul>
+    </aside>
+
+    <details id="settings">
+      <summary title="Settings" aria-label="Settings">
+        <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path d="M4 7h9M17 7h3M4 17h3M11 17h9" /><circle cx="15" cy="7" r="2.2" /><circle cx="9" cy="17" r="2.2" /></svg>
+      </summary>
+      <div id="settings-panel">
+        <div id="view-switch" class="seg" role="group" aria-label="Camera view">
+          <button data-view="pov" class="on" aria-pressed="true" title="Your own eyes (1)">👀 POV</button>
+          <button data-view="mirror" aria-pressed="false" title="Bathroom mirror (2)">🪞 Mirror</button>
+          <button data-view="orbit" aria-pressed="false" title="Free camera (3)">🌀 Orbit</button>
+        </div>
+        <label class="toggle"><input type="checkbox" id="opt-pip" /><span></span>Second view beside the instructions</label>
+        <label class="toggle"><input type="checkbox" id="opt-loop" /><span></span>Repeat each move until I go on</label>
+        <label class="toggle"><input type="checkbox" id="opt-guide" checked /><span></span>Show the move's path</label>
+        <label class="toggle"><input type="checkbox" id="opt-lefty" /><span></span>Left-handed</label>
+        <label class="toggle"><input type="checkbox" id="opt-notation" /><span></span>Show knot notation</label>
+        <label class="slider">Speed <input type="range" id="opt-speed" min="0.4" max="2" step="0.1" value="1" /></label>
+        <div class="panel-title small">Fabric</div>
+        <div id="swatches" role="group" aria-label="Tie fabric"></div>
+        <div class="panel-title small">Keys</div>
+        <dl id="keys">
+          <dt>← →</dt><dd>back / next move</dd>
+          <dt>A</dt><dd>show the move again</dd>
+          <dt>Space</dt><dd>play all / pause</dd>
+          <dt>R</dt><dd>start over</dd>
+          <dt>1 2 3</dt><dd>POV / mirror / orbit</dd>
+          <dt>C, + −</dt><dd>re-centre, zoom</dd>
+          <dt>K</dt><dd>choose a knot</dd>
+        </dl>
+      </div>
+    </details>
+
+    <div id="cam-tools" role="group" aria-label="Camera">
+      <button id="btn-center" title="Re-centre on the knot (C)" aria-label="Re-centre camera on the knot">⌖</button>
+      <button id="btn-zin" title="Zoom in (+)" aria-label="Zoom in">+</button>
+      <button id="btn-zout" title="Zoom out (−)" aria-label="Zoom out">−</button>
+    </div>
+
+    <!-- everything you look at while tying sits together, right under the knot: the other view, the words, the buttons -->
+    <div id="dock">
+      <button id="pip" hidden><span></span></button>
+      <section id="stepcard">
+        <div class="title-row">
+          <span id="step-num"></span>
+          <h2 id="step-title"></h2>
+        </div>
+        <div class="seq-row">
+          <div id="knot-seq" title="Fink–Mao notation"></div>
+          <button id="legend-btn" class="ghost" title="What do these letters mean?" aria-label="What do these letters mean?" aria-expanded="false" aria-controls="legend">?</button>
+        </div>
+        <div id="legend" hidden>
+          <b>L</b>/<b>R</b> = the wide end goes to your left/right ·
+          <b>C</b> = up through the neck loop ·
+          <b>i</b> = it crosses in front ·
+          <b>o</b> = it crosses behind ·
+          <b>T</b> = tuck it down through the front. Left and right always mean <b>your own</b> left and right, in every view.
+        </div>
+        <p id="step-text"></p>
+        <p id="step-tip"></p>
+        <div class="controls">
+          <button id="btn-prev" title="Previous move (←)" aria-label="Previous move">‹</button>
+          <button id="btn-replay" title="Show this move again (A)" aria-label="Show this move again">↻</button>
+          <button id="btn-next" class="primary" title="Next move (→)"></button>
+          <button id="btn-play" title="Play all (space)" aria-label="Play the remaining steps">▶</button>
+        </div>
+        <nav id="timeline" aria-label="Steps"></nav>
+      </section>
+    </div>
+
+    <div id="hint" aria-hidden="true"></div>
+    <div id="live" class="sr-only" aria-live="polite"></div>
+
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>

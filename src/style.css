@@ -1,0 +1,211 @@
+:root {
+  --bg: #1c1a18;
+  --panel: rgba(24, 22, 20, 0.78);
+  --line: rgba(255, 255, 255, 0.09);
+  --text: #f3eee6;
+  --muted: #b3aa9c;
+  --accent: #f2c14e;
+  --serif: 'Iowan Old Style', 'Palatino Linotype', Palatino, Georgia, serif;
+  --sans: ui-sans-serif, -apple-system, 'SF Pro Text', 'Segoe UI', Roboto, sans-serif;
+  --edge: 18px;
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; height: 100%; background: var(--bg); color: var(--text); font-family: var(--sans); overflow: hidden; }
+canvas#c { position: fixed; inset: 0; width: 100vw; height: 100vh; display: block; touch-action: none; cursor: grab; }
+canvas#c:active { cursor: grabbing; }
+button { font: inherit; color: inherit; }
+button:disabled { opacity: 0.35; cursor: default; }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0; }
+
+#vignette {
+  position: fixed; inset: 0; pointer-events: none; transition: opacity 0.5s;
+  background: radial-gradient(140% 120% at 50% 45%, transparent 55%, rgba(0, 0, 0, 0.55) 100%);
+}
+body:not(.view-pov) #vignette { opacity: 0; }
+#mirror-frame {
+  position: fixed; inset: 14px; pointer-events: none; border-radius: 28px; opacity: 0; transition: opacity 0.5s;
+  box-shadow: inset 0 0 0 10px #c9b48a, inset 0 0 0 12px #6d5a39, inset 0 0 60px rgba(255, 255, 255, 0.12);
+}
+body.view-mirror #mirror-frame { opacity: 1; }
+
+.panel-title { font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--muted); margin: 0 0 10px; }
+.panel-title.small { margin-top: 16px; }
+aside#knots, #settings-panel, #stepcard, #knot-btn, #settings > summary, #cam-tools {
+  background: var(--panel); backdrop-filter: blur(14px) saturate(1.2); -webkit-backdrop-filter: blur(14px) saturate(1.2);
+  border: 1px solid var(--line); box-shadow: 0 10px 40px rgba(0, 0, 0, 0.35);
+}
+
+/* ---------- the dock: the other view, the words and the buttons, together under the knot ---------- */
+#dock {
+  position: fixed; left: 50%; bottom: var(--edge); transform: translateX(-50%); width: min(780px, calc(100vw - 2 * var(--edge)));
+  display: flex; align-items: stretch; gap: 10px; z-index: 3;
+}
+/* a frame over the part of the canvas where the second view is drawn; it is also the button that swaps views */
+#pip {
+  flex: none; width: 196px; min-height: 204px; padding: 0; position: relative; background: transparent; cursor: pointer;
+  border: 5px solid #c9b48a; border-radius: 16px;
+  box-shadow: inset 0 0 0 1px #6d5a39, inset 0 0 24px rgba(255, 255, 255, 0.1), 0 10px 30px rgba(0, 0, 0, 0.45);
+}
+#pip[hidden] { display: none; }
+#pip:hover { border-color: #e6d2a4; }
+#pip span {
+  position: absolute; left: 6px; bottom: 6px; font: 600 10px var(--sans); letter-spacing: 0.12em; text-transform: uppercase;
+  color: var(--text); background: rgba(24, 22, 20, 0.66); padding: 3px 7px; border-radius: 99px;
+}
+#pip span::after { content: ' ⤢'; opacity: 0; transition: opacity 0.15s; }
+#pip:hover span::after { opacity: 1; }
+
+#stepcard { flex: 1; min-width: 0; min-height: 204px; border-radius: 16px; padding: 14px 18px 12px; display: flex; flex-direction: column; }
+.title-row { display: flex; align-items: center; gap: 10px; }
+#step-num {
+  flex: none; font-size: 12px; font-weight: 700; letter-spacing: 0.06em; color: #1b1916; background: var(--accent);
+  padding: 3px 8px; border-radius: 99px; font-variant-numeric: tabular-nums;
+}
+#step-title { font-family: var(--serif); font-size: 24px; margin: 0; font-weight: 700; letter-spacing: -0.01em; line-height: 1.15; }
+#step-text { margin: 8px 0 0; font-size: 17px; line-height: 1.45; color: #e8e1d5; }
+#step-text b { color: #fff; background: linear-gradient(transparent 60%, rgba(242, 193, 78, 0.35) 60%); }
+#step-tip { margin: 6px 0 0; font-size: 13px; line-height: 1.4; color: var(--muted); }
+#step-tip:empty { display: none; }
+#step-tip::before { content: '💡 '; }
+
+.seq-row { display: flex; align-items: center; gap: 8px; margin-top: 8px; }
+body:not(.notation) .seq-row { display: none; }
+#knot-seq { display: flex; flex-wrap: wrap; gap: 3px; }
+#knot-seq span {
+  font: 700 11px ui-monospace, 'SF Mono', Menlo, monospace; padding: 2px 5px; border-radius: 5px;
+  background: rgba(255, 255, 255, 0.06); color: var(--muted); transition: all 0.2s;
+}
+#knot-seq span.done { color: var(--text); }
+#knot-seq span.cur { background: var(--accent); color: #1b1916; }
+#legend { font-size: 12px; color: var(--muted); line-height: 1.5; margin-top: 8px; padding: 8px 10px; background: rgba(255, 255, 255, 0.04); border-radius: 8px; }
+#legend[hidden] { display: none; }
+button.ghost { flex: none; width: 24px; height: 24px; border-radius: 50%; border: 1px solid var(--line); background: transparent; font-size: 12px; cursor: pointer; }
+body:not(.notation) #knot-seq, body:not(.notation) #legend-btn, body:not(.notation) #legend { display: none !important; }
+
+.controls { display: flex; gap: 8px; margin-top: auto; padding-top: 12px; }
+.controls button {
+  flex: none; width: 44px; height: 44px; border-radius: 12px; border: 1px solid var(--line); background: rgba(255, 255, 255, 0.06);
+  font-size: 20px; cursor: pointer; display: grid; place-items: center; line-height: 1;
+}
+.controls button:hover:not(:disabled) { background: rgba(255, 255, 255, 0.13); }
+.controls button.primary { flex: 1; width: auto; background: var(--accent); color: #1b1916; border: 0; font: 700 15px var(--sans); letter-spacing: 0.01em; }
+.controls button.primary:hover:not(:disabled) { background: #f7cf6c; }
+#btn-play { font-size: 15px; }
+#btn-prev { font-size: 28px; padding-bottom: 4px; }
+#timeline { display: flex; gap: 4px; margin-top: 10px; }
+#timeline button { flex: 1; height: 14px; border: 0; padding: 0; cursor: pointer; background: transparent; position: relative; }
+#timeline button::before { content: ''; position: absolute; left: 0; right: 0; top: 4px; height: 6px; border-radius: 3px; background: rgba(255, 255, 255, 0.14); }
+#timeline button.done::before { background: rgba(242, 193, 78, 0.55); }
+#timeline button.cur::before { background: var(--accent); }
+#timeline button:hover::after {
+  content: attr(data-label); position: absolute; bottom: 18px; left: 50%; transform: translateX(-50%); white-space: nowrap;
+  font-size: 11px; background: #000; color: #fff; padding: 4px 7px; border-radius: 6px; pointer-events: none; z-index: 2;
+}
+
+/* ---------- knot picker ---------- */
+#knot-btn {
+  position: fixed; left: var(--edge); top: var(--edge); display: flex; align-items: center; gap: 10px; z-index: 4;
+  padding: 9px 14px 9px 16px; border-radius: 999px; cursor: pointer; transition: border-color 0.2s;
+}
+#knot-btn:hover, #knot-btn[aria-expanded='true'] { border-color: rgba(242, 193, 78, 0.6); }
+#knot-btn .lbl { font-size: 10.5px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--muted); }
+#knot-btn #knot-btn-name { font-family: var(--serif); font-size: 17px; font-weight: 600; }
+#knot-btn .chev { color: var(--accent); transition: transform 0.2s; }
+#knot-btn[aria-expanded='true'] .chev { transform: rotate(180deg); }
+aside#knots {
+  position: fixed; left: var(--edge); top: 70px; width: 340px; max-height: calc(100vh - 88px); padding: 16px 12px 12px; overflow: auto;
+  border-radius: 16px; z-index: 5; animation: drop 0.16s ease-out;
+}
+aside#knots[hidden] { display: none; }
+@keyframes drop { from { opacity: 0; transform: translateY(-6px); } }
+#knot-list { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 6px; }
+#knot-list li button {
+  width: 100%; text-align: left; border: 1px solid transparent; background: transparent; padding: 9px 10px; border-radius: 11px;
+  cursor: pointer; display: grid; grid-template-columns: 64px 1fr auto; gap: 2px 12px; align-items: center;
+}
+#knot-list li button:hover { background: rgba(255, 255, 255, 0.05); }
+#knot-list li button.on { background: rgba(242, 193, 78, 0.12); border-color: rgba(242, 193, 78, 0.45); }
+#knot-list li button > :not(.thumb) { grid-column: 2 / -1; }
+#knot-list li button > .nm { grid-column: 2; font-family: var(--serif); font-size: 16px; font-weight: 600; }
+#knot-list li button > .sz { grid-column: 3; font-size: 10.5px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.08em; }
+#knot-list .thumb {
+  grid-column: 1; grid-row: 1 / span 5; align-self: start; width: 64px; height: 64px; border-radius: 10px;
+  background: rgba(255, 255, 255, 0.06); object-fit: cover; border: 1px solid var(--line);
+}
+#knot-list .thumb:not([src]) { animation: pulse 1.2s ease-in-out infinite alternate; }
+@keyframes pulse { to { background: rgba(255, 255, 255, 0.12); } }
+#knot-list .dots { display: flex; gap: 8px; align-items: center; font-size: 11px; color: var(--muted); }
+#knot-list .dots i { display: inline-block; width: 6px; height: 6px; border-radius: 50%; background: rgba(255, 255, 255, 0.18); margin-right: 2px; }
+#knot-list .dots i.f { background: var(--accent); }
+#knot-list .blurb { font-size: 12px; color: var(--muted); line-height: 1.4; margin-top: 4px; }
+#knot-list .start { justify-self: start; font-size: 10px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: #1b1916; background: var(--accent); padding: 2px 7px; border-radius: 99px; margin-bottom: 2px; }
+
+/* ---------- settings: out of the way until wanted ---------- */
+#settings { position: fixed; right: var(--edge); top: var(--edge); z-index: 5; }
+#settings > summary {
+  list-style: none; width: 42px; height: 42px; margin-left: auto; border-radius: 50%; cursor: pointer; display: grid; place-items: center;
+  user-select: none; transition: border-color 0.2s;
+}
+#settings > summary::-webkit-details-marker { display: none; }
+#settings > summary:hover, #settings[open] > summary { border-color: rgba(242, 193, 78, 0.6); }
+#settings svg { fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; }
+#settings-panel { width: 300px; margin-top: 10px; padding: 14px 16px; border-radius: 16px; max-height: calc(100vh - 90px); overflow: auto; animation: drop 0.16s ease-out; }
+#view-switch { display: flex; padding: 4px; gap: 2px; border-radius: 999px; margin: 0 0 12px; background: rgba(255, 255, 255, 0.05); }
+.seg button { flex: 1; background: transparent; border: 0; color: var(--muted); font: 600 13px var(--sans); padding: 8px 6px; border-radius: 999px; cursor: pointer; white-space: nowrap; }
+.seg button.on { background: var(--text); color: #1b1916; }
+.toggle { display: flex; align-items: center; gap: 10px; font-size: 13px; margin: 9px 0; cursor: pointer; user-select: none; }
+.toggle input { position: absolute; opacity: 0; width: 1px; height: 1px; pointer-events: none; }
+.toggle input:focus-visible + span { outline: 2px solid var(--accent); outline-offset: 2px; }
+.toggle span { width: 30px; height: 18px; border-radius: 99px; background: rgba(255, 255, 255, 0.16); position: relative; transition: background 0.2s; flex: none; }
+.toggle span::after { content: ''; position: absolute; top: 2px; left: 2px; width: 14px; height: 14px; border-radius: 50%; background: #fff; transition: transform 0.2s; }
+.toggle input:checked + span { background: var(--accent); }
+.toggle input:checked + span::after { transform: translateX(12px); }
+.slider { display: flex; align-items: center; justify-content: space-between; gap: 10px; font-size: 13px; margin-top: 10px; }
+.slider input { width: 120px; accent-color: var(--accent); }
+#swatches { display: grid; grid-template-columns: repeat(6, 1fr); gap: 6px; }
+#swatches button { aspect-ratio: 1; border-radius: 8px; border: 2px solid transparent; cursor: pointer; padding: 0; box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.15); }
+#swatches button.on { border-color: var(--accent); }
+#keys { display: grid; grid-template-columns: auto 1fr; gap: 4px 10px; margin: 0; font-size: 12px; color: var(--muted); }
+#keys dt { font: 600 11px ui-monospace, Menlo, monospace; color: var(--text); }
+#keys dd { margin: 0; }
+
+#cam-tools { position: fixed; left: var(--edge); bottom: var(--edge); display: flex; gap: 6px; padding: 4px; border-radius: 999px; }
+#cam-tools button {
+  width: 34px; height: 34px; border-radius: 50%; border: 0; background: rgba(255, 255, 255, 0.06);
+  font-size: 18px; cursor: pointer; display: grid; place-items: center; line-height: 1;
+}
+#cam-tools button:hover { background: rgba(255, 255, 255, 0.14); }
+
+#hint { position: fixed; top: 30px; left: 50%; transform: translateX(-50%); font-size: 12px; color: var(--muted); pointer-events: none; transition: opacity 1s; text-shadow: 0 1px 4px #000; white-space: nowrap; }
+#hint.gone { opacity: 0; }
+
+/* the dock needs the bottom corners: zooming is scroll / pinch there */
+@media (max-width: 1160px) { #cam-tools { display: none; } }
+@media (max-width: 700px) {
+  :root { --edge: 10px; }
+  aside#knots { right: var(--edge); top: 58px; width: auto; max-height: calc(100vh - 76px); }
+  #settings-panel { width: min(300px, calc(100vw - 20px)); }
+  #dock { gap: 6px; }
+  #pip { width: 100px; min-height: 0; border-width: 4px; border-radius: 13px; }
+  #stepcard { min-height: 0; padding: 10px 12px 8px; border-radius: 13px; }
+  #step-title { font-size: 18px; }
+  #step-num { font-size: 11px; padding: 2px 6px; }
+  #step-text { font-size: 14px; margin-top: 6px; }
+  #step-tip { font-size: 12px; }
+  .controls { gap: 6px; padding-top: 10px; }
+  .controls button { width: 38px; height: 38px; border-radius: 10px; }
+  #timeline { margin-top: 6px; }
+  #hint { top: 58px; width: calc(100vw - 20px); text-align: center; white-space: normal; }
+}
+/* short, wide windows (a phone on its side): the dock stands at the right instead of under the picture */
+@media (max-height: 560px) and (min-width: 700px) {
+  #dock { left: auto; right: var(--edge); top: 62px; bottom: var(--edge); transform: none; width: min(440px, 50vw); gap: 6px; }
+  #hint { display: none; }
+  #pip { width: 34%; min-height: 0; border-width: 4px; }
+  #stepcard { min-height: 0; padding: 10px 12px 8px; overflow: auto; }
+  #step-title { font-size: 19px; }
+  #step-text { font-size: 14px; }
+  #step-tip { font-size: 12px; }
+  .controls button { width: 38px; height: 38px; }
+}
