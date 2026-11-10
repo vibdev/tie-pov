@@ -3,7 +3,32 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Tie POV — learn to tie a tie from your own point of view</title>
+    <title>How to Tie a Tie: 3D Step-by-Step From Your Own Point of View | necktie.fit</title>
+    <meta name="description" content="Learn how to tie a tie with an interactive 3D guide that shows each move through your own eyes, with a mirror view beside it. Four-in-Hand, Half Windsor, Full Windsor, Pratt, bow tie and more. Free, no sign-up." />
+    <link rel="canonical" href="https://necktie.fit/" />
+    <meta name="theme-color" content="#1c1a18" />
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="necktie.fit" />
+    <meta property="og:url" content="https://necktie.fit/" />
+    <meta property="og:title" content="How to tie a tie, seen from your own point of view" />
+    <meta property="og:description" content="An interactive 3D guide: every move shown through your own eyes, with the mirror beside it. Windsor, Half Windsor, Four-in-Hand, bow tie and more." />
+    <meta property="og:image" content="https://necktie.fit/og.jpg" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "WebApplication",
+        "name": "necktie.fit",
+        "url": "https://necktie.fit/",
+        "description": "Interactive 3D guide to tying a necktie or bow tie, shown from your own point of view with a mirror view beside it.",
+        "applicationCategory": "EducationalApplication",
+        "operatingSystem": "Any",
+        "image": "https://necktie.fit/og.jpg",
+        "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" }
+      }
+    </script>
     <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>👔</text></svg>" />
     <style>
       /* shown before any script or stylesheet arrives; everything else stays hidden until the scene has drawn */
@@ -31,6 +56,12 @@
       <div class="word">Tie<span>POV</span></div>
       <div class="note">pressing the shirt…</div>
     </div>
+    <!-- the app is a canvas; this says in words what it is, for screen readers and search engines -->
+    <header class="sr-only">
+      <h1>How to tie a tie, step by step, from your own point of view</h1>
+      <p>An interactive 3D guide to tying a necktie. Each move is shown the way you see it looking down at your own chest, with a mirror view beside the instructions. Go one move at a time, replay a move, or play the whole knot.</p>
+      <p>Knots: Four-in-Hand (schoolboy knot), Oriental (simple knot), Kelvin, Nicky, Pratt (Shelby), Half Windsor, Windsor (Full Windsor, Double Windsor), St. Andrew, Plattsburgh, and a self-tie bow tie. Left-handed mode included.</p>
+    </header>
     <canvas id="c"></canvas>
     <div id="vignette"></div>
     <div id="mirror-frame"></div>
